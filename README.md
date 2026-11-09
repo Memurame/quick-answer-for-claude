@@ -101,7 +101,7 @@ content.js           Bereichsauswahl, Einfügen in Formularfelder, Popup auf der
 render.js            Gemeinsame Darstellung der Antworten (Popup und Sidebar)
 sidebar/             Verlauf-Sidebar
 options/             Einstellungsseite inkl. Kürzel-Editor
-icons/icon.svg       Symbol
+icons/               Symbole (icon.svg = Vorlage, PNGs in 16–128 px)
 docs/                Bilder für dieses README
 ```
 
