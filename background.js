@@ -82,7 +82,14 @@ function newId() {
 
 /* ---------------- Claude API ---------------- */
 
-async function callClaude(settings, content, { structured = false } = {}) {
+/**
+ * @param {object} [opts]
+ * @param {boolean} [opts.structured]  Standard-Antwortformat (ANSWER_SCHEMA)
+ * @param {{schema: object, guide: string}} [opts.format]  eigenes JSON-Format
+ * @param {number} [opts.maxTokens]
+ */
+async function callClaude(settings, content, { structured = false, format = null, maxTokens = 4096 } = {}) {
+  if (structured && !format) format = { schema: ANSWER_SCHEMA, guide: FORMAT_GUIDE };
   const headers = {
     "content-type": "application/json",
     "x-api-key": settings.apiKey,
@@ -92,13 +99,13 @@ async function callClaude(settings, content, { structured = false } = {}) {
   };
   const body = {
     model: settings.model,
-    max_tokens: 4096,
-    system: structured ? settings.systemPrompt + "\n\n" + FORMAT_GUIDE : settings.systemPrompt,
+    max_tokens: maxTokens,
+    system: format ? settings.systemPrompt + "\n\n" + format.guide : settings.systemPrompt,
     output_config: { effort: settings.effort },
     messages: [{ role: "user", content }],
   };
-  if (structured) {
-    body.output_config.format = { type: "json_schema", schema: ANSWER_SCHEMA };
+  if (format) {
+    body.output_config.format = { type: "json_schema", schema: format.schema };
   }
   if (FALLBACK_MODELS.has(settings.model)) {
     // Lehnt ein Sicherheitsfilter fälschlich ab, wiederholt die API die Anfrage
@@ -136,7 +143,7 @@ async function callClaude(settings, content, { structured = false } = {}) {
       data.stop_reason === "max_tokens" ? "Antwort abgeschnitten (max_tokens)." : "Leere Antwort erhalten."
     );
   }
-  if (!structured) return { text, model: data.model || settings.model, structured: null };
+  if (!format) return { text, model: data.model || settings.model, structured: null };
 
   let parsed = null;
   try {
@@ -382,6 +389,184 @@ async function insertAnswer(tab) {
   }
 }
 
+/* ---------------- Microsoft-Forms-Modus ---------------- */
+
+const FORMS_GUIDE = `Du bekommst die Fragen einer Formularseite (z. B. Microsoft Forms) als JSON. Beantworte jede Frage und antworte im vorgegebenen JSON-Format mit genau einem Eintrag pro Frage (id übernehmen):
+- type "single" oder "dropdown": choices = genau ein Index (0-basiert) aus options.
+- type "multi": choices = die Indizes aller zutreffenden Optionen.
+- type "matrix": rows = für jede Zeile (Reihenfolge wie in rows) der Index der gewählten Spalte aus columns.
+- type "text": text = die Antwort zum direkten Eintragen. Format-Hinweise (placeholder, inputType) beachten; bei Zahlen nur die Zahl, Einheit nur, wenn verlangt. Bei mehrzeiligen Feldern darf die Antwort ausführlicher sein, sonst kurz.
+Nicht benötigte Felder leer lassen ([] bzw. ""). "context" enthält den gesamten Text der Frage (inkl. Untertitel und Optionen).
+note: höchstens ein kurzer Satz Begründung bzw. Rechenweg, sonst "". confidence: wie sicher du dir bist.
+Bilder zu einer Frage folgen nach dem JSON, jeweils mit der Frage-id angekündigt.`;
+
+const FORMS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["answers"],
+  properties: {
+    answers: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["id", "choices", "rows", "text", "note", "confidence"],
+        properties: {
+          id: { type: "integer" },
+          choices: { type: "array", items: { type: "integer" } },
+          rows: { type: "array", items: { type: "integer" } },
+          text: { type: "string" },
+          note: { type: "string" },
+          confidence: { type: "string", enum: ["high", "medium", "low"] },
+        },
+      },
+    },
+  },
+};
+
+async function fetchImageBlock(url) {
+  try {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    if (!blob.type.startsWith("image/")) return null;
+    const bmp = await createImageBitmap(blob);
+    const canvas = document.createElement("canvas");
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    canvas.getContext("2d").drawImage(bmp, 0, 0);
+    const img = canvasToApiImage(canvas);
+    return { type: "image", source: { type: "base64", media_type: img.mediaType, data: img.data } };
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Kurzfassung einer Antwort für Verlauf und Popup. */
+function summarizeFormsAnswer(q, a) {
+  if (!a) return "";
+  const pick = (i) => q.options?.[i] ?? `#${i + 1}`;
+  if (q.type === "single" || q.type === "dropdown" || q.type === "multi") {
+    return (a.choices || []).map(pick).join(", ");
+  }
+  if (q.type === "matrix") {
+    return (a.rows || [])
+      .map((c, r) => `${q.rows?.[r] ?? "Zeile " + (r + 1)} → ${q.columns?.[c] ?? "#" + (c + 1)}`)
+      .join("\n");
+  }
+  return a.text || "";
+}
+
+async function fillForms(tab) {
+  const settings = await getSettings();
+  if (!settings.apiKey) {
+    await toast(tab.id, { kind: "error", text: "Kein API-Key gesetzt – Einstellungen werden geöffnet." });
+    browser.runtime.openOptionsPage();
+    return;
+  }
+
+  const scanId = newId();
+  let scan = null;
+  try {
+    scan = await browser.tabs.sendMessage(tab.id, { type: "formsScan", scanId });
+  } catch (_) {}
+  if (!scan || !scan.questions?.length) {
+    const why = scan?.unsupported?.length
+      ? "Die Fragen auf dieser Seite werden nicht unterstützt (z. B. Rangfolge oder Datei-Upload)."
+      : "Keine Microsoft-Forms-Fragen auf dieser Seite gefunden.";
+    await toast(tab.id, { kind: "error", text: why });
+    return;
+  }
+
+  const questions = scan.questions;
+  const id = newId();
+  const entry = {
+    id,
+    ts: Date.now(),
+    kind: "forms",
+    question: `${scan.formTitle || "Formular"} · ${questions.length} Frage${questions.length === 1 ? "" : "n"}`,
+    thumb: null,
+    answer: null,
+    status: "pending",
+    url: tab.url || "",
+    model: settings.model,
+  };
+  await updateHistory((h) => [entry, ...h]);
+  await toast(tab.id, { kind: "loading", text: `Claude beantwortet ${questions.length} Fragen …` });
+
+  // Prompt: Fragen als JSON, danach Bilder mit Zuordnung zur Frage
+  const payload = {
+    form: scan.formTitle || "",
+    description: scan.formDescription || undefined,
+    questions: questions.map(({ images, ...q }) => q),
+  };
+  const content = [{ type: "text", text: JSON.stringify(payload, null, 1) }];
+  let imageCount = 0;
+  for (const q of questions) {
+    for (const url of q.images || []) {
+      if (imageCount >= 20) break;
+      const block = await fetchImageBlock(url);
+      if (!block) continue;
+      content.push({ type: "text", text: `Bild zu Frage ${q.id}:` }, block);
+      imageCount++;
+    }
+  }
+
+  try {
+    const { model, structured } = await callClaude(settings, content, {
+      format: { schema: FORMS_SCHEMA, guide: FORMS_GUIDE },
+      maxTokens: 16000,
+    });
+    const answers = structured?.answers;
+    if (!Array.isArray(answers)) throw new Error("Antwort von Claude konnte nicht gelesen werden.");
+
+    let result = { filled: [], failed: [] };
+    try {
+      result = (await browser.tabs.sendMessage(tab.id, { type: "formsFill", scanId, answers })) || result;
+    } catch (_) {}
+    const filled = new Set(result.filled);
+
+    const byId = new Map(answers.map((a) => [a.id, a]));
+    const items = questions.map((q) => {
+      const a = byId.get(q.id);
+      return {
+        label: q.question,
+        value: summarizeFormsAnswer(q, a) || "– keine Antwort",
+        confidence: a?.confidence || "",
+        note: a?.note || "",
+        filled: filled.has(q.id),
+      };
+    });
+    for (const u of scan.unsupported || []) {
+      items.push({ label: u.title, value: "– nicht unterstützt", confidence: "", note: "", filled: false });
+    }
+
+    const notFilled = items.filter((it) => !it.filled).length;
+    const unsure = items.filter((it) => it.filled && it.confidence !== "high").length;
+    const summary =
+      `${filled.size} von ${items.length} Fragen ausgefüllt` +
+      (notFilled ? ` · ${notFilled} bitte selbst beantworten` : "") +
+      (unsure ? ` · ${unsure} unsicher (markiert)` : "");
+    const formsStructured = { kind: "forms", items, note: summary };
+    const text = items.map((it, i) => `${i + 1}. ${it.label}\n   → ${it.value.replace(/\n/g, "\n     ")}`).join("\n");
+
+    await updateHistory((h) =>
+      h.map((e) => (e.id === id ? { ...e, answer: text, structured: formsStructured, status: "done", model } : e))
+    );
+    await toast(tab.id, {
+      kind: "answer",
+      text,
+      structured: formsStructured,
+      head: "Formular ausgefüllt · bitte prüfen, dann selbst auf „Weiter“ klicken",
+    });
+  } catch (err) {
+    await updateHistory((h) =>
+      h.map((e) => (e.id === id ? { ...e, answer: err.message, status: "error" } : e))
+    );
+    await toast(tab.id, { kind: "error", text: err.message });
+  }
+}
+
 /* ---------------- Tastenkürzel ---------------- */
 
 browser.commands.onCommand.addListener(async (command) => {
@@ -390,6 +575,7 @@ browser.commands.onCommand.addListener(async (command) => {
   if (command === "ask-selection") return askSelection(tab);
   if (command === "capture-region") return captureRegion(tab);
   if (command === "insert-answer") return insertAnswer(tab);
+  if (command === "fill-forms") return fillForms(tab);
 });
 
 /* ---------------- Kontextmenü ---------------- */
@@ -407,6 +593,11 @@ browser.menus.removeAll().then(() => {
     contexts: ["page", "selection", "image", "link", "editable", "frame"],
   });
   browser.menus.create({ id: "insert", title: "Aktuelle Antwort einfügen", contexts: ["editable"] });
+  browser.menus.create({
+    id: "fill-forms",
+    title: "Formular von Claude ausfüllen lassen",
+    contexts: ["page", "frame"],
+  });
 });
 
 browser.menus.onClicked.addListener(async (info, tab) => {
@@ -414,6 +605,7 @@ browser.menus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId === "ask-region") return captureRegion(tab);
   if (info.menuItemId === "ask-visible") return captureAndAsk(tab, null);
   if (info.menuItemId === "insert") return insertAnswer(tab);
+  if (info.menuItemId === "fill-forms") return fillForms(tab);
 });
 
 /* ---------------- Nachrichten von Sidebar / Options ---------------- */

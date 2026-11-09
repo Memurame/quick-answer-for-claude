@@ -60,7 +60,8 @@ function render() {
     node.classList.add(e.status);
     if (activeAnswer?.id === e.id) node.classList.add("is-active");
 
-    node.querySelector(".kind").textContent = e.kind === "image" ? "📷 Screenshot" : "📝 Text";
+    node.querySelector(".kind").textContent =
+      e.kind === "image" ? "📷 Screenshot" : e.kind === "forms" ? "📋 Formular" : "📝 Text";
     node.querySelector(".time").textContent = timeFmt.format(new Date(e.ts));
     node.querySelector(".model").textContent = shortModel(e.model);
 

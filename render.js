@@ -17,6 +17,7 @@
     choice: "Auswahl",
     number: "Rechnung",
     text: "Antwort",
+    forms: "Formular",
   };
   const CONF_LABEL = { high: "sicher", medium: "eher sicher", low: "unsicher" };
 
@@ -48,7 +49,33 @@
     .cqa-choice .cqa-row.pos .cqa-label { font-weight: 700; }
     .cqa-note { font-size: .92em; opacity: .8; white-space: pre-wrap; word-break: break-word; }
     .cqa-plain { white-space: pre-wrap; word-break: break-word; font-weight: 600; }
+    .cqa-fq { display: grid; grid-template-columns: 22px 1fr; gap: 1px 6px; padding: 5px 6px;
+              border-radius: 6px; border-left: 3px solid #2e9e5b; background: rgba(127,127,127,.08); }
+    .cqa-fq.medium { border-left-color: #d6a028; }
+    .cqa-fq.low, .cqa-fq.miss { border-left-color: #d64545; }
+    .cqa-fq-n { grid-row: span 3; font-size: 11px; font-weight: 700; opacity: .6; padding-top: 1px; }
+    .cqa-fq-q { font-size: 11px; opacity: .75; word-break: break-word; overflow: hidden;
+                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .cqa-fq-a { font-weight: 700; white-space: pre-wrap; word-break: break-word; }
+    .cqa-fq-note { font-size: 11px; opacity: .7; word-break: break-word; }
   `;
+
+  function renderForms(s, root) {
+    const list = el("ol", "cqa-rows");
+    (s.items || []).forEach((it, i) => {
+      const row = el("li", "cqa-fq " + (it.filled ? it.confidence || "" : "miss"));
+      row.append(el("span", "cqa-fq-n", String(i + 1)));
+      const q = el("span", "cqa-fq-q", it.label || "");
+      q.title = it.label || "";
+      row.append(q);
+      row.append(el("span", "cqa-fq-a", it.value || ""));
+      if (it.note) row.append(el("span", "cqa-fq-note", it.note));
+      list.append(row);
+    });
+    root.append(list);
+    if (s.note) root.append(el("div", "cqa-note", s.note));
+    return root;
+  }
 
   function el(tag, cls, text) {
     const n = document.createElement(tag);
@@ -73,6 +100,7 @@
       head.append(el("span", "cqa-badge cqa-conf-" + s.confidence, CONF_LABEL[s.confidence] || s.confidence));
     }
     root.append(head);
+    if (s.kind === "forms") return renderForms(s, root);
 
     const items = Array.isArray(s.items) ? s.items : [];
     if (items.length && (s.kind === "matrix" || s.kind === "choice")) {

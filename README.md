@@ -23,6 +23,7 @@ Firefox-Erweiterung, die markierten Text oder einen Bildschirmausschnitt an Clau
 - **Einfügen per Tastenkürzel:** in normale Eingabefelder, Textfelder und Rich-Text-Editoren, auch in iframes und auf Seiten mit React oder Vue. Ist kein Feld fokussiert, wird die Antwort in die Zwischenablage kopiert.
 - **Verlauf in der Sidebar:** durchsuchen, kopieren, löschen, eigene Fragen eintippen, auch mit einem per Strg+V eingefügten Bild aus der Zwischenablage. Mit „Als aktuelle setzen“ wird eine frühere Antwort wieder zur Antwort für das Einfüge-Kürzel.
 - **Popup auf der Seite:** zeigt kurz den Status und die Antwort an. Es bleibt stehen, solange die Maus darüber ist, und lässt sich abschalten.
+- **Microsoft-Forms-Modus:** liest alle Fragen der aktuellen Formularseite aus (Single-/Multiple-Choice, Bewertung, Likert-Matrix, Dropdown, Text, Zahl, Datum, inkl. Bilder), lässt sie in einem Durchgang von Claude beantworten und füllt die Antworten direkt ein. Unsichere Antworten werden auf der Seite gestrichelt markiert (gelb = eher sicher, rot = unsicher). Auf „Weiter“ bzw. „Absenden“ klickst du selbst; danach auf der nächsten Seite einfach wieder das Kürzel drücken. Jede Seite landet als kompakte Liste (Frage → Antwort) im Verlauf. Rangfolge- und Datei-Upload-Fragen werden übersprungen.
 - **Eigene Tastenkürzel:** direkt in den Einstellungen festlegen.
 
 ## Installation
@@ -76,6 +77,7 @@ Normale Firefox-Versionen installieren nur signierte Erweiterungen. Es gibt zwei
 | `Ctrl+Alt+A` | Markierten Text an Claude schicken |
 | `Ctrl+Alt+S` | Bereich aufziehen und als Screenshot schicken · `Enter` = ganzer sichtbarer Bereich · `Esc` = Abbruch |
 | `Ctrl+Alt+V` | Aktuelle Antwort ins fokussierte Feld einfügen |
+| `Ctrl+Alt+F` | Microsoft-Forms-Seite ausfüllen lassen (auch per Rechtsklick → „Formular von Claude ausfüllen lassen“) |
 | `Ctrl+Alt+H` | Sidebar mit dem Verlauf ein-/ausblenden |
 
 Alle Aktionen gibt es auch im Rechtsklick-Menü.

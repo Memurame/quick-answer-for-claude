@@ -55,6 +55,7 @@ const COMMAND_LABELS = {
   "ask-selection": "Markierten Text an Claude schicken",
   "capture-region": "Screenshot-Bereich (Enter = ganzer sichtbarer Bereich)",
   "insert-answer": "Aktuelle Antwort ins fokussierte Feld einfügen",
+  "fill-forms": "Formular (Microsoft Forms) ausfüllen lassen",
   _execute_sidebar_action: "Verlauf-Sidebar ein-/ausblenden",
 };
 
