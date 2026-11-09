@@ -1,4 +1,4 @@
-/* Quick Claude Answer – gemeinsame Darstellung strukturierter Antworten
+/* Quick Answer for Claude – gemeinsame Darstellung strukturierter Antworten
  * Wird vom Content-Script (Popup im Shadow DOM) und von der Sidebar genutzt.
  * Baut ausschliesslich DOM-Knoten mit textContent – kein innerHTML für Modell-Text.
  */

@@ -1,9 +1,9 @@
-/* Quick Claude Answer – Content-Script */
+/* Quick Answer for Claude – Content-Script */
 "use strict";
 
 (() => {
-  if (window.__quickClaudeAnswer) return;
-  window.__quickClaudeAnswer = true;
+  if (window.__quickAnswerForClaude) return;
+  window.__quickAnswerForClaude = true;
 
   const isTop = window === window.top;
 
