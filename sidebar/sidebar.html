@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>Claude Verlauf</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <header>
+    <section class="active">
+      <div class="label">Aktuelle Antwort <span class="kbd" id="insert-kbd"></span></div>
+      <div id="active-text" class="active-text muted">–</div>
+    </section>
+    <form id="ask-form">
+      <textarea id="ask-input" rows="2" placeholder="Eigene Frage stellen … (Strg+Enter)"></textarea>
+      <button type="submit">Fragen</button>
+    </form>
+    <div class="toolbar">
+      <input id="filter" type="search" placeholder="Verlauf durchsuchen">
+      <button id="clear" class="ghost" title="Gesamten Verlauf löschen">Leeren</button>
+      <button id="settings" class="ghost" title="Einstellungen">⚙</button>
+    </div>
+  </header>
+  <main id="list"></main>
+  <template id="item-tpl">
+    <article class="item">
+      <div class="meta"><span class="kind"></span><span class="time"></span><span class="model"></span></div>
+      <img class="thumb" alt="Screenshot">
+      <div class="question"></div>
+      <div class="answer"></div>
+      <div class="actions">
+        <button data-act="use">Als aktuelle setzen</button>
+        <button data-act="copy">Kopieren</button>
+        <button data-act="retry">Erneut</button>
+        <button data-act="delete" class="ghost">Löschen</button>
+      </div>
+    </article>
+  </template>
+  <script src="../render.js"></script>
+  <script src="sidebar.js"></script>
+</body>
+</html>

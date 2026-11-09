@@ -1,0 +1,47 @@
+# Build- & Packaging-Artefakte (web-ext)
+web-ext-artifacts/
+*.xpi
+*.zip
+*.crx
+*.pem
+dist/
+build/
+
+# Node (falls später Tooling dazukommt)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+
+# Secrets / lokale Konfiguration
+.env
+.env.*
+!.env.example
+.amo-upload-uuid
+.web-extension-id
+
+# Firefox-Testprofile
+.web-ext-profile/
+profile/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Betriebssystem
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Temp
+*.log
+tmp/
+.cache/
+
+# Claude Code (lokale Einstellungen)
+.claude/settings.local.json
