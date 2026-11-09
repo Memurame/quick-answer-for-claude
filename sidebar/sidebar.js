@@ -69,7 +69,7 @@ function render() {
     else thumb.remove();
 
     const qEl = node.querySelector(".question");
-    if (e.question && e.kind === "text") qEl.textContent = e.question;
+    if (e.question) qEl.textContent = e.question;
     else qEl.remove();
 
     const ansEl = node.querySelector(".answer");
@@ -134,12 +134,44 @@ listEl.addEventListener("click", async (ev) => {
   }
 });
 
+/* Bild aus der Zwischenablage (Strg+V) an die eigene Frage anhängen */
+const askImageBox = document.getElementById("ask-image");
+const askImageEl = askImageBox.querySelector("img");
+let askImage = null; // Data-URL des eingefügten Bildes
+
+function setAskImage(dataUrl) {
+  askImage = dataUrl;
+  askImageEl.src = dataUrl || "";
+  askImageBox.hidden = !dataUrl;
+}
+
+function readAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+askInput.addEventListener("paste", async (ev) => {
+  const item = [...(ev.clipboardData?.items || [])].find(
+    (i) => i.kind === "file" && i.type.startsWith("image/")
+  );
+  if (!item) return; // normaler Text-Paste
+  ev.preventDefault();
+  const file = item.getAsFile();
+  if (file) setAskImage(await readAsDataUrl(file));
+});
+document.getElementById("ask-image-remove").addEventListener("click", () => setAskImage(null));
+
 askForm.addEventListener("submit", (ev) => {
   ev.preventDefault();
   const text = askInput.value.trim();
-  if (!text) return;
-  browser.runtime.sendMessage({ type: "askManual", text });
+  if (!text && !askImage) return;
+  browser.runtime.sendMessage({ type: "askManual", text, image: askImage });
   askInput.value = "";
+  setAskImage(null);
 });
 askInput.addEventListener("keydown", (ev) => {
   if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) askForm.requestSubmit();

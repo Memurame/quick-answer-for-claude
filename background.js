@@ -420,9 +420,33 @@ browser.menus.onClicked.addListener(async (info, tab) => {
 
 browser.runtime.onMessage.addListener((msg) => {
   if (msg.type === "askManual") {
-    return getActiveTab().then((tab) =>
-      ask({ kind: "text", text: msg.text, tabId: null, url: tab?.url || "" })
-    );
+    return getActiveTab().then(async (tab) => {
+      const url = tab?.url || "";
+      if (!msg.image) return ask({ kind: "text", text: msg.text, tabId: null, url });
+      let canvas;
+      try {
+        const img = await loadImage(msg.image);
+        canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext("2d").drawImage(img, 0, 0);
+      } catch {
+        return updateHistory((h) => [
+          {
+            id: newId(),
+            ts: Date.now(),
+            kind: "image",
+            question: msg.text || "",
+            thumb: null,
+            answer: "Bild aus der Zwischenablage konnte nicht gelesen werden.",
+            status: "error",
+            url,
+          },
+          ...h,
+        ]);
+      }
+      return ask({ kind: "image", canvas, text: msg.text || "", tabId: null, url });
+    });
   }
   if (msg.type === "testKey") {
     return getSettings().then(async (s) => {

@@ -21,7 +21,7 @@ Firefox-Erweiterung, die markierten Text oder einen Bildschirmausschnitt an Clau
 
   Dazu zeigt jede Antwort an, wie sicher sich Claude ist (sicher / eher sicher / unsicher), und gibt höchstens einen Satz Begründung.
 - **Einfügen per Tastenkürzel:** in normale Eingabefelder, Textfelder und Rich-Text-Editoren, auch in iframes und auf Seiten mit React oder Vue. Ist kein Feld fokussiert, wird die Antwort in die Zwischenablage kopiert.
-- **Verlauf in der Sidebar:** durchsuchen, kopieren, löschen, eigene Fragen eintippen. Mit „Als aktuelle setzen“ wird eine frühere Antwort wieder zur Antwort für das Einfüge-Kürzel.
+- **Verlauf in der Sidebar:** durchsuchen, kopieren, löschen, eigene Fragen eintippen, auch mit einem per Strg+V eingefügten Bild aus der Zwischenablage. Mit „Als aktuelle setzen“ wird eine frühere Antwort wieder zur Antwort für das Einfüge-Kürzel.
 - **Popup auf der Seite:** zeigt kurz den Status und die Antwort an. Es bleibt stehen, solange die Maus darüber ist, und lässt sich abschalten.
 - **Eigene Tastenkürzel:** direkt in den Einstellungen festlegen.
 

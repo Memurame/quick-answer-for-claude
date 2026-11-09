@@ -12,9 +12,13 @@
       <div id="active-text" class="active-text muted">–</div>
     </section>
     <form id="ask-form">
-      <textarea id="ask-input" rows="2" placeholder="Eigene Frage stellen … (Strg+Enter)"></textarea>
+      <textarea id="ask-input" rows="2" placeholder="Eigene Frage stellen … (Strg+Enter, Bild mit Strg+V einfügen)"></textarea>
       <button type="submit">Fragen</button>
     </form>
+    <div id="ask-image" class="ask-image" hidden>
+      <img alt="Eingefügtes Bild">
+      <button type="button" class="ghost" id="ask-image-remove" title="Bild entfernen">✕</button>
+    </div>
     <div class="toolbar">
       <input id="filter" type="search" placeholder="Verlauf durchsuchen">
       <button id="clear" class="ghost" title="Gesamten Verlauf löschen">Leeren</button>
