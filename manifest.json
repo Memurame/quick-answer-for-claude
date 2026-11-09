@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Quick Answer for Claude",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Markierten Text oder Screenshot-Bereiche an Claude schicken, kurze Antworten erhalten und per Tastenkürzel in Formularfelder einfügen.",
   "browser_specific_settings": {
     "gecko": {
