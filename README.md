@@ -1,4 +1,4 @@
-# Claude Quick Answer
+# Quick Claude Answer
 
 Firefox-Erweiterung, die markierten Text oder einen Bildschirmausschnitt an Claude schickt und eine kurze, übersichtliche Antwort zurückgibt. Die Antwort lässt sich per Tastenkürzel direkt in ein Formularfeld einfügen. Alle Fragen und Antworten landen in einer Sidebar als Verlauf.
 
@@ -52,12 +52,12 @@ Normale Firefox-Versionen installieren nur signierte Erweiterungen. Es gibt zwei
 - **Ohne Signatur:** Nur mit Firefox Developer Edition, Nightly oder ESR möglich, wenn dort in `about:config` `xpinstall.signatures.required` auf `false` steht. Dann packen und installieren:
 
   ```bash
-  zip -r ../claude-quick-answer.xpi . -x 'docs/*' 'README.md' '.git/*' 'web-ext-artifacts/*'
+  zip -r ../quick-claude-answer.xpi . -x 'docs/*' 'README.md' '.git/*' 'web-ext-artifacts/*'
   ```
 
 ## Einrichtung
 
-1. Einstellungen öffnen: `about:addons` → Claude Quick Answer → **Einstellungen**. Die Seite öffnet sich auch automatisch, wenn beim ersten Benutzen noch kein API-Key gesetzt ist.
+1. Einstellungen öffnen: `about:addons` → Quick Claude Answer → **Einstellungen**. Die Seite öffnet sich auch automatisch, wenn beim ersten Benutzen noch kein API-Key gesetzt ist.
 2. API-Key eintragen, **Verbindung testen** und **Speichern** klicken.
 3. Optional Modell, Denktiefe, System-Prompt und Tastenkürzel anpassen.
 

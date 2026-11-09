@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
-  "name": "Claude Quick Answer",
+  "name": "Quick Claude Answer",
   "version": "1.0.0",
   "description": "Markierten Text oder Screenshot-Bereiche an Claude schicken, kurze Antworten erhalten und per Tastenkürzel in Formularfelder einfügen.",
   "browser_specific_settings": {
     "gecko": {
-      "id": "claude-quick-answer@localhost",
+      "id": "quick-claude-answer@localhost",
       "strict_min_version": "115.0",
       "data_collection_permissions": {
         "required": ["websiteContent"]

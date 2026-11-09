@@ -1,4 +1,4 @@
-/* Claude Quick Answer – Hintergrundskript */
+/* Quick Claude Answer – Hintergrundskript */
 "use strict";
 
 const API_URL = "https://api.anthropic.com/v1/messages";
